@@ -1,0 +1,45 @@
+cmake_minimum_required(VERSION 3.30)
+project(doremote
+  VERSION 0.1
+  LANGUAGES CXX C
+)
+
+set(CORE_LIB_NAME ${PROJECT_NAME}-core)
+set(SHARED_LIB_NAME ${PROJECT_NAME})
+set(STATIC_LIB_NAME ${PROJECT_NAME}-static)
+set(CL_DEMO_NAME ${PROJECT_NAME}-cl)
+set(QT_DEMO_NAME ${PROJECT_NAME}-qt)
+set(TEST_EXE_NAME ${PROJECT_NAME}-test)
+
+set(COMMON_TARGET_DEFS
+  _WIN32_WINNT=0x0A00
+  _CONSOLE
+  _CRT_SECURE_NO_WARNINGS
+  $<$<CONFIG:Debug>:_DEBUG>
+  $<$<CONFIG:Release>:NDEBUG>
+)
+
+include_directories(${CORE_LIB_NAME} PRIVATE
+  ${CMAKE_SOURCE_DIR}/third-party
+  ${BOOST_ROOT}
+)
+
+include(GNUInstallDirs)
+
+add_subdirectory(lib)
+add_subdirectory(demo-cl)
+add_subdirectory(demo-qt)
+
+install(FILES COPYRIGHT LICENSE
+  DESTINATION /
+)
+
+set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
+
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_ZIP_COMPRESSION_LEVEL 9)
+
+include(CPack)
