@@ -9,7 +9,11 @@ allow for sending commands to Dorico. The following videos show short sessions w
 
 ### GUI Demo
 
+https://github.com/user-attachments/assets/956531d7-46a8-4887-8d5a-a264f89134dd
+
 ### Command-line Demo
+
+https://github.com/user-attachments/assets/0fc92180-ef3d-4536-8440-778139b644f1
 
 ## Build Requirements
 The core library is developed in C++20 using [Boost.Beast](https://www.boost.org/doc/libs/latest/libs/beast/doc/html/index.html)
