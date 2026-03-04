@@ -5,7 +5,6 @@ add_library(${CORE_LIB_NAME} OBJECT
   DoricoRemote.cpp
   DoricoRemote.hpp
   Request.hpp
-  WSMessage.hpp
   Response.hpp
 )
 

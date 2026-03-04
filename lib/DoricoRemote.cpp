@@ -35,7 +35,6 @@
 
 #include "DoricoRemote.hpp"
 #include "Request.hpp"
-#include "WSMessage.hpp"
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -48,6 +47,7 @@ using net::use_awaitable;
 using std::string;
 
 using SocketStream = websocket::stream<tcp::socket>;
+using nlohmann::json;
 
 // Class providing the actual implementation for DoricoRemote.
 // To keep the Boost stuff out of the public interface, we declare it here.
@@ -66,7 +66,7 @@ class DoricoRemoteImpl {
         Request::Response send (Request &request, SendMode mode=SendMode::NORMAL);
 
         void send (const Request &request, Response &response, SendMode mode=SendMode::NORMAL);
-        WSMessage getMessage (const string &type) const;
+        json getMessage (const string &type) const;
         string getMessageValue (const string &type, const string &key) const;
         void setStatusCallback (DoricoRemote::StatusCallback cb) {statusCallback_ = std::move(cb);}
         void setTerminationCallback (DoricoRemote::TerminationCallback cb) {terminationCallback_ = std::move(cb);}
@@ -155,7 +155,7 @@ void DoricoRemote::send (const Request &request, Response &response) const {
     impl_->send(request, response);
 }
 
-WSMessage DoricoRemote::getMessage (const string &type) const {
+json DoricoRemote::getMessage (const string &type) const {
     return impl_->getMessage(type);
 }
 
@@ -488,7 +488,7 @@ Request::Response DoricoRemoteImpl::send (Request &request, SendMode mode) {
     return runAwaitableSync(asyncSend(request, mode));
 }
 
-WSMessage DoricoRemoteImpl::getMessage (const string &type) const {
+json DoricoRemoteImpl::getMessage (const string &type) const {
     auto it = receivedMsgs_.find(type);
     if (it != receivedMsgs_.end())
         return it->second;
@@ -496,5 +496,15 @@ WSMessage DoricoRemoteImpl::getMessage (const string &type) const {
 }
 
 string DoricoRemoteImpl::getMessageValue (const string &type, const string &key) const {
-    return getMessage(type).getAsString(key);
+    json msg = getMessage(type);
+    try {
+        if (msg.is_object() && msg.contains(key)) {
+            std::ostringstream oss;
+            oss << msg[key];
+            return oss.str();
+        }
+    }
+    catch (json::exception&) {
+    }
+    return {};
 }

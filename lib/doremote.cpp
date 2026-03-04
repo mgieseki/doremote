@@ -115,8 +115,8 @@ extern "C" {
     const char* doremote_get_response (doremote_handle handle, char *json, int size) {
         if (!handle || !json)
             return nullptr;
-        WSMessage msg = handle->instance.getMessage("response");
-        strncpy(json, msg.toString(4).c_str(), size);
+        const nlohmann::json msg = handle->instance.getMessage("response");
+        strncpy(json, msg.dump(4).c_str(), size);
         return json;
     }
 
@@ -155,10 +155,10 @@ extern "C" {
     void doremote_set_status_callback (doremote_handle handle, StatusCallback callback, void *userdata) {
         if (!handle || !callback)
             return;
-        handle->instance.setStatusCallback([callback, userdata](const WSMessage &status_msg) {
+        handle->instance.setStatusCallback([callback, userdata](const nlohmann::json &status_msg) {
             std::vector<KeyValuePair> status_kv;
             status_kv.reserve(status_msg.size());
-            for (auto &[key, value] : status_msg.getJson().items()) {
+            for (auto &[key, value] : status_msg.items()) {
                 KeyValuePair kv;
                 strncpy(kv.key, key.c_str(), 63);
                 strncpy(kv.value, value.dump().c_str(), 255);

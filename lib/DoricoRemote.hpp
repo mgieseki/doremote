@@ -17,7 +17,6 @@
 
 #include <memory>
 #include <string>
-#include "WSMessage.hpp"
 #include "Request.hpp"
 
 class DoricoRemoteImpl;
@@ -28,7 +27,7 @@ struct ConnectionException : std::exception {
 
 class DoricoRemote {
     public:
-        using StatusCallback = std::function<void (const WSMessage &)>;
+        using StatusCallback = std::function<void (const nlohmann::json&)>;
         using TerminationCallback = std::function<void ()>;
         enum LogLevel {LL_TRACE, LL_INFO, LL_WARN, LL_ERROR, LL_OFF};
 
@@ -49,7 +48,7 @@ class DoricoRemote {
             return response;
         }
 
-        WSMessage getMessage (const std::string &type) const;
+        nlohmann::json getMessage (const std::string &type) const;
         std::string getMessageValue (const std::string &type, const std::string &key) const;
         void setStatusCallback (StatusCallback callback) const;
         void setTerminationCallback (TerminationCallback callback) const;
