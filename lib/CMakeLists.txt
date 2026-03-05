@@ -6,6 +6,8 @@ add_library(${CORE_LIB_NAME} OBJECT
   DoricoRemote.hpp
   Request.hpp
   Response.hpp
+  utility.hpp
+  utility.cpp
 )
 
 # DLL/shared library exporting the C wrapper functions

@@ -18,6 +18,7 @@
 #include <map>
 #include <string>
 #include "Response.hpp"
+#include "utility.hpp"
 
 class Request {
     public:
@@ -33,8 +34,14 @@ class Request {
         static std::string msg (const std::string &name, const std::map<std::string, std::string> &entries) {
             std::string msg = R"({"message":")" + name + "\",";
             for (const auto &[key, value] : entries) {
-                if (!value.empty())
-                    msg += "\"" + key + "\":\"" + value + "\",";
+                if (!value.empty()) {
+                    msg += "\"" + key + "\":";
+                    if (value[0] == '"')  // keep quotes created by json_string() unchanged
+                        msg += value;
+                    else
+                        msg += "\"" + value + "\"";  // quote unquoted strings
+                    msg += ',';
+                }
             }
             msg.pop_back();
             msg += "}";
@@ -59,7 +66,7 @@ class ConnectRequest : public SendableRequest<SessionTokenResponse> {
         std::string toString () const override {
             return msg("connect", {
                 {"handshakeVersion", "1.0"},
-                {"clientName", clientName_}
+                {"clientName", util::json_string(clientName_)}
             });
         }
 
@@ -79,8 +86,8 @@ class ReconnectRequest : public SendableRequest<CodeResponse> {
         std::string toString () const override {
             return msg("connect", {
                 {"handshakeVersion", "1.0"},
-                {"clientName", clientName_},
-                {"sessionToken", sessionToken_}
+                {"clientName", util::json_string(clientName_)},
+                {"sessionToken", util::json_string(sessionToken_)}
             });
         }
 
@@ -97,7 +104,7 @@ class AcceptSessionTokenRequest : public SendableRequest<CodeResponse> {
 
         std::string toString () const override {
             return msg("acceptsessiontoken", {
-                {"sessionToken", sessionToken_}
+                {"sessionToken", util::json_string(sessionToken_)}
             });
         }
 
@@ -138,7 +145,7 @@ class CommandRequest : public SendableRequest<CodeResponse> {
             for (const auto &[key, value] : params_)
                 msg += key + "=" + value + ",";
             msg.pop_back();  // remove trailing ',' or '?'
-            return msg;
+            return util::json_string(msg);
         }
 
     private:
