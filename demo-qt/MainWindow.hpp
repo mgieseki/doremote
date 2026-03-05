@@ -35,7 +35,11 @@ class MainWindow : public QMainWindow {
     protected:
         void doricoConnect();
         void doricoDisconnect();
-        static void status_updated(KeyValuePair *kv, int size, void *self);
+        static void status_updated (KeyValuePair *kv, int size, void *userdata);
+        static void dorico_terminated (void *userdata);
+
+    public slots:
+        void handleTermination ();
 
     private slots:
         void on_actionConnect_button_toggled(bool activate);

@@ -18,7 +18,7 @@
 #include "MainWindow.hpp"
 #include "./ui_MainWindow.h"
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow (QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , settings_("MG", "DoremoteTest")
@@ -29,7 +29,7 @@ MainWindow::MainWindow(QWidget *parent)
     doremote_ = doremote_create_instance();
 }
 
-MainWindow::~MainWindow() {
+MainWindow::~MainWindow () {
     doremote_destroy_instance(doremote_);
     delete ui;
 }
@@ -45,11 +45,11 @@ void MainWindow::on_actionConnect_button_toggled (bool activate) {
     }
 }
 
-void MainWindow::on_actionUpdateStatus_button_triggered() {
+void MainWindow::on_actionUpdateStatus_button_triggered () {
     doremote_update_status(doremote_);
 }
 
-void MainWindow::on_commandEdit_returnPressed() {
+void MainWindow::on_commandEdit_returnPressed () {
     QString command = ui->commandEdit->text();
     doremote_send_command(doremote_, command.toUtf8().constData());
     char response[1024];
@@ -86,6 +86,7 @@ void MainWindow::doricoConnect () {
                 + " (session token: " + token + ")");
             ui->actionUpdateStatus_button->setEnabled(true);
             doremote_set_status_callback(doremote_, &MainWindow::status_updated, this);
+            doremote_set_termination_callback(doremote_, &MainWindow::dorico_terminated, this);
             statusUpdater_.assign(ui->statusTable);
             populateCommandBox();
             break;
@@ -102,7 +103,7 @@ void MainWindow::doricoConnect () {
     }
 }
 
-void MainWindow::doricoDisconnect() {
+void MainWindow::doricoDisconnect () {
     doremote_disconnect(doremote_);
     ui->statusTable->setRowCount(0);
     ui->commandEdit->clearItems();
@@ -116,6 +117,11 @@ void MainWindow::status_updated (KeyValuePair *status, int size, void *userdata)
     if (!status || !self)
         return;
     self->statusUpdater_.enqueue(status, size);
+}
+
+void MainWindow::dorico_terminated (void *userdata) {
+    auto self = static_cast<MainWindow*>(userdata);
+    QMetaObject::invokeMethod(self, &MainWindow::handleTermination, Qt::QueuedConnection);
 }
 
 static QString format_tooltip (const QString &cmd, const QString &param_str) {
@@ -153,4 +159,9 @@ void MainWindow::populateCommandBox () {
             ui->commandEdit->setItemPairs(item_pairs);
         }
     }
+}
+
+void MainWindow::handleTermination () {
+    QMessageBox::critical(this, "Connection Error", "Connection to Dorico terminated.");
+    doricoDisconnect();
 }
