@@ -51,7 +51,7 @@ class StatusTableUpdater : public QObject {
             QMetaObject::invokeMethod(this, &StatusTableUpdater::drainQueue, Qt::QueuedConnection);
         }
 
-    public slots:
+    protected slots:
         void drainQueue () {
             for (;;) {
                 StatusVector status;
