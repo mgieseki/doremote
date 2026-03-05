@@ -84,6 +84,10 @@ extern "C" {
             handle->instance.disconnect();
     }
 
+    int doremote_is_connected (doremote_handle handle) {
+        return handle ? handle->instance.isConnected() : 0;
+    }
+
     const char* doremote_session_token (doremote_handle handle) {
         if (handle) {
             const std::string &token = handle->instance.sessionToken();

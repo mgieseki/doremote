@@ -39,6 +39,7 @@ class DoricoRemote {
         bool connect (const std::string &clientName, const std::string &host, const std::string &port) const;
         bool connect (const std::string &clientName, const std::string &host, const std::string &port, const std::string &token) const;
         void disconnect () const;
+        bool isConnected () const;
         const std::string& sessionToken () const;
 
         template <class Request>

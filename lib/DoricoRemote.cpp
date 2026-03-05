@@ -60,6 +60,7 @@ class DoricoRemoteImpl {
         bool connect (const string &clientName, const string &host, const string &port);
         bool connect (const string &clientName, const string &host, const string &port, const string &token);
         void disconnect ();
+        bool isConnected () const {return running_;}
         const string& sessionToken () const {return sessionToken_;}
 
         template <class Request>
@@ -141,6 +142,11 @@ bool DoricoRemote::connect (const string &clientName, const string &host, const 
 /** Terminate the connection to Dorico. */
 void DoricoRemote::disconnect () const {
     impl_->disconnect();
+}
+
+/** Returns true if the connection to Dorico is established and the communication is working. */
+bool DoricoRemote::isConnected () const {
+    return impl_->isConnected();
 }
 
 /** Returns the token of the current session or an empty string if there's no session active. */

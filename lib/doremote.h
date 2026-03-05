@@ -56,6 +56,7 @@ DOREMOTE_EXPORT void doremote_set_loglevel (doremote_handle handle, int level);
 DOREMOTE_EXPORT int doremote_connect (doremote_handle handle, const char *name, const char *host, const char *port);
 DOREMOTE_EXPORT int doremote_reconnect (doremote_handle handle, const char *name, const char *host, const char *port, const char *token);
 DOREMOTE_EXPORT void doremote_disconnect (doremote_handle handle);
+DOREMOTE_EXPORT int doremote_is_connected (doremote_handle handle);
 DOREMOTE_EXPORT const char* doremote_session_token (doremote_handle handle);
 DOREMOTE_EXPORT void doremote_get_app_info (doremote_handle handle, DoricoAppInfo *info);
 DOREMOTE_EXPORT int doremote_send_command (doremote_handle handle, const char *command);
