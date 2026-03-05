@@ -400,7 +400,7 @@ awaitable<void> DoricoRemoteImpl::readingLoop () {
         terminationCallback_();
     responseTimer_.cancel();
     if (ec.failed())
-        logger_->error(ec.message());
+        logger_->info(ec.message());
     logger_->trace("stopped collecting responses");
     co_return;
 }
