@@ -56,8 +56,8 @@ struct SendableRequest : Request {
 
 class ConnectRequest : public SendableRequest<SessionTokenResponse> {
     public:
-        ConnectRequest (const std::string &clientName)
-            : clientName_(clientName) {}
+        ConnectRequest (std::string clientName)
+            : clientName_(std::move(clientName)) {}
 
         std::string info () const override {
             return "connect '"+clientName_+"'";
@@ -76,8 +76,8 @@ class ConnectRequest : public SendableRequest<SessionTokenResponse> {
 
 class ReconnectRequest : public SendableRequest<CodeResponse> {
     public:
-        ReconnectRequest (const std::string &clientName, const std::string &token)
-            : clientName_(clientName), sessionToken_(token) {}
+        ReconnectRequest (std::string clientName, std::string token)
+            : clientName_(std::move(clientName)), sessionToken_(std::move(token)) {}
 
         std::string info () const override {
             return "connect '"+clientName_+"' using session token " + sessionToken_;
@@ -132,9 +132,9 @@ class GetCommandsRequest : public SendableRequest<CommandListResponse> {
 
 class CommandRequest : public SendableRequest<CodeResponse> {
     public:
-        CommandRequest (const std::string &command) : command_(command) {}
-        CommandRequest (const std::string &command, std::map<std::string, std::string> params)
-            : command_(command), params_(std::move(params)) {}
+        CommandRequest (std::string command) : command_(std::move(command)) {}
+        CommandRequest (std::string command, std::map<std::string, std::string> params)
+            : command_(std::move(command)), params_(std::move(params)) {}
 
         std::string info () const override {return "command " + command();}
         std::string toString () const override {return msg("command", {{"command", command()}});}
