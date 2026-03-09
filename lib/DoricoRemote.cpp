@@ -41,7 +41,7 @@ namespace http = beast::http;
 namespace net = boost::asio;
 namespace websocket = beast::websocket;
 
-using boost::asio::ip::tcp;
+using net::ip::tcp;
 using net::awaitable;
 using net::use_awaitable;
 using std::string;
