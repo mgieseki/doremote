@@ -95,12 +95,13 @@ class DoricoRemoteImpl {
 
         net::io_context ioc_;                 //< provides the basic network I/O functionality
         WorkGuard workGuard_;                 //< keeps the I/O thread running until the connection is closed
-        std::jthread ioThread_;               //< the websocket I/O runs in this thread
+        std::jthread ioThread_;               //< the WebSocket I/O runs in this thread
         SocketStream ws_;                     //< the messages from and to Dorico are sent over this stream
         net::steady_timer responseTimer_;     //< timer used to wait for responses
         string sessionToken_;                 //< token of the current session
-        bool connected_ = false;              //< true if connection to Dorico is established
+        bool connected_ = false;              //< true if connection to Dorico has been established
         bool running_ = false;                //< true if the message thread is running
+        bool sentDisconnect_ = false;         //< true if a 'disconnect' request was sent to Dorico
         ReceivedMsgMap receivedMsgs_;         //< last received messages from Dorico separated by message type
         ReceivedMsgMapIt lastReceivedMsgIt_;
         std::shared_ptr<spdlog::logger> logger_;
@@ -244,10 +245,11 @@ static awaitable<void> establish_connection (SocketStream &ws, string host, stri
  *  @return true if the connection has been established */
 awaitable<bool> DoricoRemoteImpl::asyncConnect (const string &clientName, const string &host, const string &port) {
     logger_->info("connecting '" + clientName + "' to " + host + ":" + port);
-    if (connected_) {
+    if (running_ && connected_) {
         logger_->info("already connected");
         co_return false;
     }
+    sentDisconnect_ = false;
     try {
         co_await establish_connection(ws_, host, port);
     }
@@ -284,10 +286,11 @@ awaitable<bool> DoricoRemoteImpl::asyncConnect (const string &clientName, const 
  *  @return true if the connection has been established */
 awaitable<bool> DoricoRemoteImpl::asyncConnect (const string &clientName, const string &host, const string &port, const string &token) {
     logger_->info("connecting '" + clientName + "' to " + host + ":" + port + " with token " + token);
-    if (connected_) {
+    if (running_ && connected_) {
         logger_->info("already connected");
         co_return false;
     }
+    sentDisconnect_ = false;
     try {
         co_await establish_connection(ws_, host, port);
     }
@@ -315,16 +318,18 @@ awaitable<bool> DoricoRemoteImpl::asyncConnect (const string &clientName, const 
 
 /** Terminate the connection to Dorico. */
 awaitable<void> DoricoRemoteImpl::asyncDisconnect () {
-    if (connected_) {
+    if (running_) {
         try {
             DisconnectRequest disconnectRequest;
             co_await asyncSend(disconnectRequest, SendMode::FORCE);
         }
         catch (...) {
         }
+    }
+    if (connected_) {
+        connected_ = false;
         beast::error_code ec;
         ws_.close(websocket::close_code::normal, ec);
-        connected_ = false;
         sessionToken_.clear();
         receivedMsgs_.clear();
         lastReceivedMsgIt_ = receivedMsgs_.end();
@@ -344,11 +349,13 @@ awaitable<void> DoricoRemoteImpl::asyncSend (const Request &request, Response &r
     logger_->info("sending " + request.info());
     logger_->trace(string("[\033[035mreq\033[0m] ") + request.toString());
     lastReceivedMsgIt_ = receivedMsgs_.end();
+    if (dynamic_cast<const DisconnectRequest*>(&request))
+        sentDisconnect_ = true;
     co_await ws_.async_write(net::buffer(request.toString()), use_awaitable);
     if (response.type().empty() || !running_)
         co_return;
 
-    // wait until reading_loop() receives a response and cancels the timer
+    // wait until readingLoop() receives a response and cancels the timer
     responseTimer_.expires_at(net::steady_timer::time_point::max());
     boost::system::error_code ec;
     co_await responseTimer_.async_wait(net::redirect_error(use_awaitable, ec));
@@ -402,8 +409,11 @@ awaitable<void> DoricoRemoteImpl::readingLoop () {
         }
     }
     running_ = false;
-    if (terminationCallback_)
-        terminationCallback_();
+    if (!sentDisconnect_) {  // connection terminated without prior 'disconnect' request?
+        if (terminationCallback_)
+            terminationCallback_();
+        co_await asyncDisconnect();
+    }
     responseTimer_.cancel();
     if (ec.failed())
         logger_->info(ec.message());
