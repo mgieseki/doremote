@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.30)
 project(doremote
-  VERSION 0.1
+  VERSION 0.2
   LANGUAGES CXX C
 )
 
