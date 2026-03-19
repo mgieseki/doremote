@@ -25,14 +25,13 @@ class DoremoteWrapper {
         ~DoremoteWrapper();
         int connect ();
         void disconnect ();
-        bool connected () const {return !token_.empty();};
+        bool connected () const;
+        bool terminated () const {return !token_.empty() && !connected();}
         const std::string& sessionToken () const {return token_;}
         Commands getCommands () const;
         std::string sendCommand (const std::string &cmd) const;
         DoricoAppInfo getDoricoAppInfo () const;
         void setConfirmationCallback (void (*callback)()) {confirmationCallback_ = callback;}
-        void setTerminated (bool terminated) {terminated_ = terminated;}
-        bool terminated () const {return terminated_;}
 
     protected:
         static void saveSessionToken (const std::string &token);
@@ -42,5 +41,4 @@ class DoremoteWrapper {
         doremote_handle handle_ = DOREMOTE_NULL_HANDLE;
         std::string token_;
         void (*confirmationCallback_)() = nullptr;
-        bool terminated_ = false;
 };

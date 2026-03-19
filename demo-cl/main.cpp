@@ -615,7 +615,6 @@ int main(int argc_, char** argv_) {
             doricoCommands.clear();
             add_basic_commands(doricoCommands);
             doremote.disconnect();
-            doremote.setTerminated(false);
         }
         if (input.empty()) {
             // user hit enter on an empty line

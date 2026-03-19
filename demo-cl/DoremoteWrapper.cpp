@@ -21,9 +21,8 @@ DoremoteWrapper::~DoremoteWrapper () {
     doremote_destroy_instance(handle_);
 }
 
-static void termination_callback (void *data) {
-    auto doremote = static_cast<DoremoteWrapper*>(data);
-    doremote->setTerminated(true);
+bool DoremoteWrapper::connected () const {
+    return handle_ && doremote_is_connected(handle_);
 }
 
 int DoremoteWrapper::connect () {
@@ -50,8 +49,6 @@ int DoremoteWrapper::connect () {
             // save session token for future connections
             token_ = doremote_session_token(handle_);
             saveSessionToken(token_);
-            setTerminated(false);
-            doremote_set_termination_callback(handle_, &termination_callback, this);
         }
     }
     else {
