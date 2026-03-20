@@ -32,6 +32,7 @@ class DoremoteWrapper {
         std::string sendCommand (const std::string &cmd) const;
         DoricoAppInfo getDoricoAppInfo () const;
         void setConfirmationCallback (void (*callback)()) {confirmationCallback_ = callback;}
+        bool exportCommands (const std::string &fname) const;
 
     protected:
         static void saveSessionToken (const std::string &token);

@@ -382,7 +382,8 @@ static void bind_keys (Replxx &rx) {
 static void add_basic_commands (std::map<std::string,std::string> &doricoCommands) {
     std::vector<std::string> commands {
         "history", "quit", "exit",
-        "connect", "disconnect"
+        "connect", "disconnect",
+        "export-commands"
     };
     for (const auto &cmd : commands)
         doricoCommands.emplace(cmd, "");
@@ -670,6 +671,20 @@ int main(int argc_, char** argv_) {
                 doricoCommands.clear();
                 add_basic_commands(doricoCommands);
                 prompt = defaultPrompt;
+            }
+        }
+        else if (input.compare(0, 15, "export-commands") == 0) {
+            if (!doremote.connected())
+                std::cout << "not connected to Dorico\n";
+            else {
+                std::string fname = input.length() < 16 ? "" : input.substr(16);
+                fname.erase(std::remove_if(fname.begin(), fname.end(), ::isspace), fname.end());
+                if (fname.empty())
+                    std::cout << "filename expected\n";
+                else if (doremote.exportCommands(fname))
+                    std::cout << "output written to " << fname << "\n";
+                else
+                    std::cout << "failed to export commands\n";
             }
         }
         else {

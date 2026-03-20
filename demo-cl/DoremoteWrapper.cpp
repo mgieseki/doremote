@@ -13,7 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <algorithm>
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include "DoremoteWrapper.hpp"
 
@@ -101,4 +103,41 @@ DoremoteWrapper::Commands DoremoteWrapper::getCommands() const {
         }
     }
     return commands;
+}
+
+static std::vector<std::string> extract_params (std::string const &paramstr) {
+    std::vector<std::string> params;
+    std::istringstream is(paramstr);
+    std::string param;
+    while (std::getline(is, param, ','))
+        params.emplace_back(param);
+    return params;
+}
+
+bool DoremoteWrapper::exportCommands (const std::string &fname) const {
+    if (!connected())
+        return false;
+    std::ofstream ofs(fname, std::ios::binary);
+    if (!ofs)
+        return false;
+    const DoricoAppInfo info = getDoricoAppInfo();
+    const auto commands = getCommands();
+    ofs << "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+        << "<commands dorico-version='" << info.number << "'>\n";
+    for (const auto &[cmd, params] : commands) {
+        ofs << "  <command name='" << cmd << (params.empty() ? "'/>\n" : "'>\n");
+        for (auto param : extract_params(params)) {
+            bool mandatory = true;
+            if (param.front() == '[') {
+                param = param.substr(1);
+                param.pop_back();
+                mandatory = false;
+            }
+            ofs << "    <parameter name='" << param << "' mandatory='" << (mandatory ? "yes" : "no") << "'/>\n";
+        }
+        if (!params.empty())
+            ofs << "  </command>\n";
+    }
+    ofs << "</commands>\n";
+    return true;
 }
